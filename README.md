@@ -1,73 +1,61 @@
-# React + TypeScript + Vite
+# Knowhere 🌌
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<div align="center">
+  <img src="public/favicon.svg" alt="Knowhere Logo" width="120" />
+  <br/>
+  <h3>An Intelligent, Client-Side GitHub Project Tracker</h3>
+  <p>Seamlessly visualize, categorize, and auto-organize your GitHub repositories with a buttery-smooth UI.</p>
+</div>
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Features
 
-## React Compiler
+- **Premium UI/UX:** Built with a glassmorphic design system, dynamic themes (Dark, Light, Cyberpunk), and 3D card tilt effects.
+- **Auto-Organize Intelligence:** Leverages the Google Gemini API to read your uncategorized repositories and automatically sort them into the correct buckets (Frontend, Backend, AI/ML, etc.).
+- **Zero Backend Footprint:** 100% Client-Side Architecture. Your API keys and categories are stored securely in your browser's Local Storage.
+- **Power User Mechanics:** 
+  - `Cmd+K` Command Palette for lightning-fast navigation.
+  - Multi-select bulk drag-and-drop.
+  - Pin-to-top functionality for your favorite projects.
+- **Tech Stack Analytics:** Instantly view a breakdown of your most used programming languages.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠️ Tech Stack
 
-## Expanding the ESLint configuration
+- **Frontend:** React 19, TypeScript, Vite
+- **Styling:** Custom CSS Variables (No Tailwind)
+- **State Management:** Zustand (with persist middleware)
+- **Animations:** Framer Motion, React Parallax Tilt
+- **Icons & Visuals:** Lucide React, Recharts
+- **AI Integration:** `@google/generative-ai`
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## ⚙️ Quick Start (Local)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1. **Clone the repository:**
+   \`\`\`bash
+   git clone https://github.com/Ares19v/Knowhere.git
+   cd Knowhere
+   \`\`\`
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+2. **Install dependencies & Run:**
+   Simply double click the provided batch files on Windows:
+   - Run `INSTALL.bat`
+   - Run `Run_Project.bat`
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+   *Alternatively, run `npm install` and `npm run dev` in your terminal.*
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+3. **Setup:**
+   Open the application in your browser. You will be greeted by the secure Setup Screen. Paste your GitHub Personal Access Token (and optional Gemini API Key) directly into the UI.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🐳 Docker Deployment
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+For a production-grade containerized deployment using Nginx:
+
+\`\`\`bash
+docker-compose up --build -d
+\`\`\`
+The application will be served at `http://localhost:8080`.
+
+## 📜 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

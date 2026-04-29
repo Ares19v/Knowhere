@@ -86,5 +86,5 @@ When you first launch Knowhere, you will be greeted by the Setup Screen. You wil
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 <div align="center">
-  <sub>Built with ❤️ for organizing the chaos of development.</sub>
+  <sub>Built for organizing the chaos of development.</sub>
 </div>

@@ -9,7 +9,9 @@ export interface Repository {
   html_url: string;
   topics: string[];
   updated_at: string;
+  stargazers_count?: number;
   category: string; 
+  localPath?: string;
 }
 
 export interface Category {
@@ -37,6 +39,8 @@ interface AppState {
   updateRepoCategoriesBulk: (repoIds: number[], category: string) => void;
   addCategory: (name: string, emoji?: string, color?: string) => void;
   updateCategory: (id: string, updates: Partial<Category>) => void;
+  deleteCategory: (id: string) => void;
+  updateRepoLocalPath: (repoId: number, path: string) => void;
   togglePinRepo: (repoId: number) => void;
   setTheme: (theme: ThemeType) => void;
   setIsLoading: (loading: boolean) => void;
@@ -94,6 +98,26 @@ export const useStore = create<AppState>()(
           categories: state.categories.map(c => c.id === id ? { ...c, ...updates } : c)
         })),
 
+      deleteCategory: (id) =>
+        set((state) => {
+          const categoryToDelete = state.categories.find(c => c.id === id);
+          if (!categoryToDelete || categoryToDelete.name === 'Uncategorized') return state;
+          
+          return {
+            categories: state.categories.filter(c => c.id !== id),
+            repositories: state.repositories.map(repo => 
+              repo.category === categoryToDelete.name ? { ...repo, category: 'Uncategorized' } : repo
+            )
+          };
+        }),
+
+      updateRepoLocalPath: (repoId, path) =>
+        set((state) => ({
+          repositories: state.repositories.map(repo => 
+            repo.id === repoId ? { ...repo, localPath: path } : repo
+          )
+        })),
+
       togglePinRepo: (repoId) =>
         set((state) => {
           const isPinned = state.pinnedRepos.includes(repoId);
@@ -117,18 +141,31 @@ export const useStore = create<AppState>()(
 
         set({ isLoading: true });
         try {
-          const response = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', {
-            headers: {
-              Authorization: `token ${githubToken}`,
-              Accept: 'application/vnd.github.v3+json',
+          let allData: any[] = [];
+          let page = 1;
+          let hasMore = true;
+
+          while (hasMore && page <= 5) { // Cap at 5 pages (500 repos) for safety
+            const response = await fetch(`https://api.github.com/user/repos?per_page=100&sort=updated&page=${page}`, {
+              headers: {
+                Authorization: `token ${githubToken}`,
+                Accept: 'application/vnd.github.v3+json',
+              }
+            });
+            
+            if (!response.ok) throw new Error('Failed to fetch repositories');
+            
+            const data = await response.json();
+            allData = [...allData, ...data];
+            
+            if (data.length < 100) {
+              hasMore = false;
+            } else {
+              page++;
             }
-          });
+          }
           
-          if (!response.ok) throw new Error('Failed to fetch repositories');
-          
-          const data = await response.json();
-          
-          const newRepos: Repository[] = data.map((repo: any) => {
+          const newRepos: Repository[] = allData.map((repo: any) => {
             const existingRepo = repositories.find(r => r.id === repo.id);
             return {
               id: repo.id,
@@ -138,7 +175,9 @@ export const useStore = create<AppState>()(
               html_url: repo.html_url,
               topics: repo.topics || [],
               updated_at: repo.updated_at,
+              stargazers_count: repo.stargazers_count || 0,
               category: existingRepo ? existingRepo.category : 'Uncategorized',
+              localPath: existingRepo?.localPath,
             };
           });
 

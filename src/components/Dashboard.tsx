@@ -2,25 +2,31 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useStore } from '../store';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Folder, LogOut, Star, RefreshCw, Plus, Search, Palette, Pin, AlertTriangle, CheckSquare, Square } from 'lucide-react';
+import { Sparkles, Folder, LogOut, Star, RefreshCw, Plus, Search, Palette, Pin, AlertTriangle, CheckSquare, Square, MapPin, Copy, Edit2, Check, Radar, Globe, Trash2 } from 'lucide-react';
 import { autoOrganizeRepos } from '../utils/autoOrganize';
 import Tilt from 'react-parallax-tilt';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { Command } from 'cmdk';
 
 const Dashboard = () => {
   const { 
     repositories, categories, isLoading, fetchRepositories, 
     updateRepoCategory, updateRepoCategoriesBulk, addCategory, 
-    logout, geminiToken, pinnedRepos, togglePinRepo, theme, setTheme 
+    logout, geminiToken, pinnedRepos, togglePinRepo, theme, setTheme,
+    updateRepoLocalPath, deleteCategory
   } = useStore();
 
-  const [activeCategoryId, setActiveCategoryId] = useState(categories[0]?.id || 'cat_1');
+  const [activeCategoryId, setActiveCategoryId] = useState<string>(categories[0]?.id || 'cat_1');
   const [isOrganizing, setIsOrganizing] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [selectedRepos, setSelectedRepos] = useState<number[]>([]);
+
+  const [editingPathRepoId, setEditingPathRepoId] = useState<number | null>(null);
+  const [editingPathValue, setEditingPathValue] = useState('');
+  const [copiedPathRepoId, setCopiedPathRepoId] = useState<number | null>(null);
+  const [hoveredCategoryId, setHoveredCategoryId] = useState<string | null>(null);
 
   const activeCategory = categories.find(c => c.id === activeCategoryId);
 
@@ -28,6 +34,16 @@ const Dashboard = () => {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
+
+  const [localFolders, setLocalFolders] = useState<{name: string, path: string, parent: string}[]>([]);
+
+  useEffect(() => {
+    if (activeCategoryId === 'track_everything') {
+      fetch('/api/local-paths').then(res => res.json()).then(data => {
+        setLocalFolders(data);
+      }).catch(console.error);
+    }
+  }, [activeCategoryId]);
 
   useEffect(() => {
     fetchRepositories();
@@ -96,33 +112,76 @@ const Dashboard = () => {
 
   // Filter and sort repos
   const filteredRepos = useMemo(() => {
-    if (!activeCategory) return [];
-    return repositories
-      .filter(repo => repo.category === activeCategory.name)
-      .sort((a, b) => {
-        const aPinned = pinnedRepos.includes(a.id);
-        const bPinned = pinnedRepos.includes(b.id);
-        if (aPinned && !bPinned) return -1;
-        if (!aPinned && bPinned) return 1;
-        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
-      });
-  }, [repositories, activeCategory, pinnedRepos]);
+    if (!activeCategoryId) return [];
+    
+    let baseRepos = repositories;
+    if (activeCategoryId !== 'all' && activeCategoryId !== 'track_everything') {
+      baseRepos = repositories.filter(repo => repo.category === activeCategory?.name);
+    }
 
-  // Tech Stack Analytics (Pie Chart Data)
-  const languageData = useMemo(() => {
-    const counts: Record<string, number> = {};
+    return baseRepos.sort((a, b) => {
+      const aPinned = pinnedRepos.includes(a.id);
+      const bPinned = pinnedRepos.includes(b.id);
+      if (aPinned && !bPinned) return -1;
+      if (!aPinned && bPinned) return 1;
+      return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+    });
+  }, [repositories, activeCategory, activeCategoryId, pinnedRepos]);
+
+  const trackEverythingData = useMemo(() => {
+    const projectsFolderRepos: any[] = [];
+    const otherProjectsFolderRepos: any[] = [];
+    const githubOnlyRepos: any[] = [];
+
+    localFolders.forEach(folder => {
+      if (folder.name === 'dups') return;
+
+      const githubRepo = repositories.find(r => r.name.toLowerCase() === folder.name.toLowerCase());
+      const merged = githubRepo ? { ...githubRepo, matchedPath: folder.path } : { id: folder.path, name: folder.name, matchedPath: folder.path };
+
+      if (folder.parent.includes('Other projects')) {
+        otherProjectsFolderRepos.push(merged);
+      } else if (folder.parent.endsWith('Projects')) {
+        projectsFolderRepos.push(merged);
+      }
+    });
+
     repositories.forEach(repo => {
+      const hasLocalMatch = localFolders.some(f => f.name.toLowerCase() === repo.name.toLowerCase() && f.name !== 'dups');
+      if (!hasLocalMatch) {
+        githubOnlyRepos.push(repo);
+      }
+    });
+
+    return { projectsFolderRepos, otherProjectsFolderRepos, githubOnlyRepos };
+  }, [repositories, localFolders]);
+
+  // Tech Stack Analytics & Stats
+  const analyticsData = useMemo(() => {
+    let totalStars = 0;
+    let needsLoveCount = 0;
+    const counts: Record<string, number> = {};
+
+    repositories.forEach(repo => {
+      totalStars += repo.stargazers_count || 0;
+      
+      const needsLove = !repo.description || repo.description.length < 10 || (repo.stargazers_count || 0) === 0;
+      if (needsLove) needsLoveCount++;
+
       if (repo.language) {
         counts[repo.language] = (counts[repo.language] || 0) + 1;
       }
     });
-    return Object.entries(counts)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 5); // top 5
+
+    const topLanguages = Object.entries(counts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 7); // top 7
+
+    return { totalStars, needsLoveCount, topLanguages };
   }, [repositories]);
 
-  const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
+  const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899'];
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
@@ -152,7 +211,40 @@ const Dashboard = () => {
         </button>
 
         <div style={{ flex: 1, overflowY: 'auto' }}>
+          <div
+            onClick={() => setActiveCategoryId('track_everything')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.75rem',
+              padding: '0.75rem', borderRadius: '8px', cursor: 'pointer',
+              background: activeCategoryId === 'track_everything' ? 'var(--accent-glow)' : 'var(--bg-tertiary)',
+              color: activeCategoryId === 'track_everything' ? 'var(--accent-primary)' : 'var(--text-main)',
+              border: activeCategoryId === 'track_everything' ? '1px solid var(--accent-primary)' : '1px solid transparent',
+              marginBottom: '1.5rem', transition: 'all 0.2s', fontWeight: 600
+            }}
+          >
+            <Radar size={18} /> Track Everything
+          </div>
+
           <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '0.75rem', padding: '0 0.5rem', fontWeight: 600 }}>Folders</div>
+          
+          <div
+            onClick={() => setActiveCategoryId('all')}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '0.75rem', borderRadius: '8px', cursor: 'pointer',
+              background: activeCategoryId === 'all' ? 'var(--bg-tertiary)' : 'transparent',
+              color: activeCategoryId === 'all' ? 'var(--text-main)' : 'var(--text-muted)',
+              borderLeft: activeCategoryId === 'all' ? `3px solid var(--text-main)` : '3px solid transparent',
+              marginBottom: '0.25rem', transition: 'all 0.2s'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span>🌍</span>
+              <span style={{ fontWeight: 500 }}>All Repositories</span>
+            </div>
+            <span style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '10px' }}>{repositories.length}</span>
+          </div>
+
           {categories.map(cat => {
             const count = repositories.filter(r => r.category === cat.name).length;
             const isActive = activeCategoryId === cat.id;
@@ -162,6 +254,8 @@ const Dashboard = () => {
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, cat.name)}
                 onClick={() => setActiveCategoryId(cat.id)}
+                onMouseEnter={() => setHoveredCategoryId(cat.id)}
+                onMouseLeave={() => setHoveredCategoryId(null)}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   padding: '0.75rem', borderRadius: '8px', cursor: 'pointer',
@@ -175,7 +269,24 @@ const Dashboard = () => {
                   <span>{cat.emoji}</span>
                   <span style={{ fontWeight: 500 }}>{cat.name}</span>
                 </div>
-                <span style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '10px' }}>{count}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {hoveredCategoryId === cat.id && cat.name !== 'Uncategorized' && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm(`Are you sure you want to delete the folder "${cat.name}"? Any repos inside will be moved to Uncategorized.`)) {
+                          deleteCategory(cat.id);
+                          if (activeCategoryId === cat.id) setActiveCategoryId(categories[0].id);
+                        }
+                      }}
+                      style={{ color: 'var(--danger)', padding: '2px', background: 'transparent' }}
+                      title="Delete Folder"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                  <span style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '10px' }}>{count}</span>
+                </div>
               </div>
             );
           })}
@@ -226,10 +337,12 @@ const Dashboard = () => {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <h1 style={{ fontSize: '2rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                {activeCategory?.emoji} {activeCategory?.name}
+                {activeCategoryId === 'track_everything' ? <><Radar size={32} /> Track Everything</> 
+                  : activeCategoryId === 'all' ? <>🌍 All Repositories</>
+                  : <>{activeCategory?.emoji} {activeCategory?.name}</>}
               </h1>
             </div>
-            <p style={{ fontSize: '0.9rem', marginTop: '0.25rem' }}>{filteredRepos.length} repositories</p>
+            <p style={{ fontSize: '0.9rem', marginTop: '0.25rem' }}>{activeCategoryId === 'track_everything' ? `${trackEverythingData.projectsFolderRepos.length + trackEverythingData.otherProjectsFolderRepos.length + trackEverythingData.githubOnlyRepos.length} total items tracked` : `${filteredRepos.length} repositories`}</p>
           </div>
           
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
@@ -259,25 +372,48 @@ const Dashboard = () => {
 
         {/* Repos Grid */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '2rem 3rem' }}>
-          {/* Tech Stack Chart (Only show in "All" or if we want global overview, but let's show it only if there are repos) */}
-          {activeCategory?.name === 'Uncategorized' && languageData.length > 0 && (
-            <div className="glass" style={{ padding: '1rem', borderRadius: '16px', marginBottom: '2rem', display: 'flex', height: '120px' }}>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ fontSize: '1rem', marginBottom: '0.25rem' }}>Global Tech Stack</h3>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Top languages across all repositories</p>
+          {activeCategoryId === 'track_everything' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              
+              <div style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+                <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-primary)' }}><Folder size={18} /> In 'Projects' Folder ({trackEverythingData.projectsFolderRepos.length})</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
+                  {trackEverythingData.projectsFolderRepos.map(repo => (
+                     <div key={repo.id} className="glass" style={{ padding: '1rem', borderRadius: '8px', fontSize: '0.9rem' }}>
+                       <div style={{ fontWeight: 600, marginBottom: '0.5rem' }}>{repo.name}</div>
+                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={repo.matchedPath}>{repo.matchedPath}</div>
+                     </div>
+                  ))}
+                </div>
               </div>
-              <div style={{ width: '200px' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={languageData} cx="50%" cy="50%" innerRadius={30} outerRadius={45} paddingAngle={5} dataKey="value" stroke="none">
-                      {languageData.map((_, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px' }} />
-                  </PieChart>
-                </ResponsiveContainer>
+
+              <div style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+                <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#10b981' }}><Folder size={18} /> In 'Other Projects' Folder ({trackEverythingData.otherProjectsFolderRepos.length})</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
+                  {trackEverythingData.otherProjectsFolderRepos.map(repo => (
+                     <div key={repo.id} className="glass" style={{ padding: '1rem', borderRadius: '8px', fontSize: '0.9rem' }}>
+                       <div style={{ fontWeight: 600, marginBottom: '0.5rem' }}>{repo.name}</div>
+                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={repo.matchedPath}>{repo.matchedPath}</div>
+                     </div>
+                  ))}
+                </div>
               </div>
+
+              <div style={{ padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+                <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)' }}><Globe size={18} /> GitHub Only ({trackEverythingData.githubOnlyRepos.length})</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
+                  {trackEverythingData.githubOnlyRepos.map(repo => (
+                     <div key={repo.id} className="glass" style={{ padding: '1rem', borderRadius: '8px', fontSize: '0.9rem', opacity: 0.7 }}>
+                       <div style={{ fontWeight: 600 }}>{repo.name}</div>
+                     </div>
+                  ))}
+                </div>
+              </div>
+
             </div>
-          )}
+          ) : (
+            <>
+
 
           {isLoading && repositories.length === 0 ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Loading repositories...</div>
@@ -342,6 +478,66 @@ const Dashboard = () => {
                           )}
                         </div>
 
+                        {/* Local Path Tracker */}
+                        <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                          {editingPathRepoId === repo.id ? (
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                              <input 
+                                autoFocus
+                                value={editingPathValue}
+                                onChange={e => setEditingPathValue(e.target.value)}
+                                placeholder="e.g. C:\Projects\MyRepo"
+                                style={{ flex: 1, padding: '0.4rem', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid var(--accent-primary)', background: 'var(--bg-color)', color: 'var(--text-main)', outline: 'none' }}
+                                onClick={e => e.stopPropagation()}
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter') {
+                                    updateRepoLocalPath(repo.id, editingPathValue);
+                                    setEditingPathRepoId(null);
+                                  } else if (e.key === 'Escape') {
+                                    setEditingPathRepoId(null);
+                                  }
+                                }}
+                              />
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); updateRepoLocalPath(repo.id, editingPathValue); setEditingPathRepoId(null); }}
+                                style={{ padding: '0.4rem', background: 'var(--accent-primary)', color: 'white', borderRadius: '4px', display: 'flex', alignItems: 'center' }}
+                              ><Check size={14} /></button>
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', overflow: 'hidden' }}>
+                                <MapPin size={14} style={{ flexShrink: 0 }} />
+                                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={repo.localPath || 'No local path set'}>
+                                  {repo.localPath || 'No local path set'}
+                                </span>
+                              </div>
+                              <div style={{ display: 'flex', gap: '0.25rem', flexShrink: 0 }}>
+                                {repo.localPath && (
+                                  <button 
+                                    onClick={(e) => { 
+                                      e.stopPropagation(); 
+                                      navigator.clipboard.writeText(repo.localPath!); 
+                                      setCopiedPathRepoId(repo.id); 
+                                      setTimeout(() => setCopiedPathRepoId(null), 2000); 
+                                    }}
+                                    style={{ padding: '0.25rem', borderRadius: '4px', background: 'var(--bg-tertiary)', color: copiedPathRepoId === repo.id ? '#10b981' : 'var(--text-main)' }}
+                                    title="Copy Path"
+                                  >
+                                    {copiedPathRepoId === repo.id ? <Check size={14} /> : <Copy size={14} />}
+                                  </button>
+                                )}
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); setEditingPathValue(repo.localPath || ''); setEditingPathRepoId(repo.id); }}
+                                  style={{ padding: '0.25rem', borderRadius: '4px', background: 'var(--bg-tertiary)', color: 'var(--text-main)' }}
+                                  title="Edit Path"
+                                >
+                                  <Edit2 size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
                         {/* Multi-select overlay hook */}
                         <div onClick={(e) => toggleSelect(repo.id, e)} style={{ position: 'absolute', top: '1rem', right: '2.5rem', cursor: 'pointer', color: isSelected ? 'var(--accent-primary)' : 'var(--text-muted)' }}>
                            {isSelected ? <CheckSquare size={16} /> : <Square size={16} opacity={0.2} className="select-square" />}
@@ -359,6 +555,8 @@ const Dashboard = () => {
                 </div>
               )}
             </motion.div>
+          )}
+          </>
           )}
         </div>
       </div>

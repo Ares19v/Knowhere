@@ -2,10 +2,14 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import fs from 'fs'
 import path from 'path'
+import os from 'os'
 
-const projectsDir = 'C:\\Users\\Devansh Tyagi\\Desktop\\Projects';
-const otherProjectsDir = 'C:\\Users\\Devansh Tyagi\\Desktop\\Other projects';
-const dupsDir = 'C:\\Users\\Devansh Tyagi\\Desktop\\Other projects\\dups';
+const homeDir = os.homedir();
+const searchDirs = [
+  path.join(homeDir, 'Desktop', 'Projects'),
+  path.join(homeDir, 'Desktop', 'Other projects'),
+  path.join(homeDir, 'Desktop', 'Other projects', 'dups')
+];
 
 function getFolders(dir: string) {
   try {
@@ -24,12 +28,8 @@ export default defineConfig({
     {
       name: 'local-fs-api',
       configureServer(server) {
-        server.middlewares.use('/api/local-paths', (req, res) => {
-          const allFolders = [
-            ...getFolders(projectsDir),
-            ...getFolders(otherProjectsDir),
-            ...getFolders(dupsDir)
-          ];
+        server.middlewares.use('/api/local-paths', (_req, res) => {
+          const allFolders = searchDirs.flatMap(dir => getFolders(dir));
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify(allFolders));
         })

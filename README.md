@@ -12,7 +12,6 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Google Gemini](https://img.shields.io/badge/Gemini_AI-Enabled-8E75C2?style=for-the-badge&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
 <p align="center">
   <b>A real-time GitHub telemetry cockpit and intelligent project dashboard. Track repository commit velocity, automated CI/CD pipeline health, issue resolution times, and generate AI-powered repository summaries with Google Gemini.</b>
@@ -83,6 +82,6 @@ Access Knowhere at `http://localhost:80` (or `http://localhost:5173` in developm
 
 ---
 
-## ?? License
+© 2025 Devansh Tyagi (Ares19v). All Rights Reserved.
 
-Distributed under the MIT License. See `LICENSE` for details.
+Unauthorized copying, modification, distribution, or use of this project or any of its components, in whole or in part, without explicit written permission from the author is strictly prohibited.

@@ -5,6 +5,9 @@
 # Knowhere
 ### Intelligent GitHub Project Intelligence & Portfolio Tracker
 
+[![CI](https://github.com/Ares19v/Knowhere/actions/workflows/ci.yml/badge.svg)](https://github.com/Ares19v/Knowhere/actions/workflows/ci.yml)
+
+
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Google Gemini](https://img.shields.io/badge/Gemini_AI-Enabled-8E75C2?style=for-the-badge&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)

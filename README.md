@@ -1,95 +1,85 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/sparkles.svg" alt="Knowhere Logo" width="100" />
-  <h1>Knowhere</h1>
-  <p><strong>The Intelligent GitHub Project Tracker & Dashboard</strong></p>
 
-  <p>
-    <a href="https://reactjs.org/"><img src="https://img.shields.io/badge/React-19-blue.svg?style=flat-square&logo=react" alt="React 19" /></a>
-    <a href="https://vitejs.dev/"><img src="https://img.shields.io/badge/Vite-6-646CFF.svg?style=flat-square&logo=vite" alt="Vite" /></a>
-    <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5.x-3178C6.svg?style=flat-square&logo=typescript" alt="TypeScript" /></a>
-    <a href="https://zustand-demo.pmnd.rs/"><img src="https://img.shields.io/badge/State-Zustand-orange.svg?style=flat-square" alt="Zustand" /></a>
-    <a href="https://github.com/Ares19v/Knowhere/actions"><img src="https://img.shields.io/github/actions/workflow/status/Ares19v/Knowhere/ci.yml?style=flat-square&logo=github" alt="Build Status" /></a>
-  </p>
-</div>
+<img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/sparkles.svg" alt="Knowhere Logo" width="80" />
 
----
+# Knowhere
+### Intelligent GitHub Project Intelligence & Portfolio Tracker
 
-**Knowhere** is a state-of-the-art, 100% client-side React SPA that securely connects to your GitHub account and helps you visualize, categorize, and organize your repositories through a buttery-smooth, interactive UI.
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Google Gemini](https://img.shields.io/badge/Gemini_AI-Enabled-8E75C2?style=for-the-badge&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
-## ✨ Features
-
-- 🧠 **Auto-Organize Intelligence**: Uses the Google Gemini API to analyze uncategorized repositories and automatically sort them into correct folders (e.g., Frontend, Backend, AI/ML).
-- 🎨 **Premium Glassmorphic UI**: Dynamic theming (Dark, Light, Cyberpunk), buttery-smooth Framer Motion transitions, and 3D parallax tilt cards.
-- 🚀 **Power User Tools**: 
-  - `Cmd+K` Command Palette for instant global search.
-  - Multi-select bulk drag-and-drop.
-  - Pin-to-top functionality for your most important work.
-- 📊 **Tech Stack Analytics**: A global dashboard pie-chart breaking down your most used programming languages.
-- 🛡️ **Zero Backend / Maximum Privacy**: All GitHub PATs and API keys are stored securely in your browser's local storage. Your data never leaves your machine.
-
----
-
-## 🚀 Quick Start (Local Development)
-
-The fastest way to get Knowhere running locally on your machine.
-
-### Prerequisites
-- Node.js 20+
-
-### Installation & Launch
-
-1. **Clone the repository**
-   \`\`\`bash
-   git clone https://github.com/Ares19v/Knowhere.git
-   cd Knowhere
-   \`\`\`
-
-2. **Windows Launch (.bat Scripts)**
-   Simply double-click the provided batch files:
-   - Run `INSTALL.bat` to cleanly install all dependencies.
-   - Run `Run_Project.bat` to start the development server and open the app in your browser.
-
-   *(To clean your environment, run `UNINSTALL.bat`)*
-
-3. **Standard CLI Launch**
-   \`\`\`bash
-   npm install
-   npm run dev
-   \`\`\`
-
----
-
-## 🐳 Docker Deployment (Production)
-
-Knowhere includes a professional multi-stage Docker build, serving the optimized static bundle out of an incredibly fast, lightweight Nginx web server.
-
-### Run with Docker Compose
-\`\`\`bash
-docker-compose up --build -d
-\`\`\`
-The application will be instantly available at `http://localhost:8080`.
-
----
-
-## 🔑 Initial Setup & API Keys
-
-When you first launch Knowhere, you will be greeted by the Setup Screen. You will need:
-1. **GitHub Personal Access Token (PAT)**: Requires `Read-Only` access to "Contents" and "Metadata" for all repositories. This is used to fetch your projects securely.
-2. **Google Gemini API Key (Optional)**: Required only if you wish to use the "Auto-Organize" magic button.
-
-*Note: These keys are saved directly to your local storage and are never transmitted to any third-party servers.*
-
----
-
-## 📜 License
-
-
-
-<div align="center">
-  <sub>Built for organizing the chaos of development.</sub>
-</div>
-
----
 <p align="center">
-  Made by Devansh Tyagi @ 2026
+  <b>A real-time GitHub telemetry cockpit and intelligent project dashboard. Track repository commit velocity, automated CI/CD pipeline health, issue resolution times, and generate AI-powered repository summaries with Google Gemini.</b>
 </p>
+
+</div>
+
+---
+
+## ?? Overview
+
+**Knowhere** is a developer intelligence dashboard designed to monitor and organize sprawling software ecosystems. By integrating GitHub REST and GraphQL APIs with client-side reactive charts and optional Google Gemini AI synthesis, Knowhere turns chaotic git histories into structured, actionable engineering insights.
+
+---
+
+## ? Key Features
+
+- **?? Real-Time Commit & Velocity Tracking**: Visual commit heatmaps, language distribution breakdowns, and branch activity timelines.
+- **?? AI Repository Summarizer**: Integrated `@google/generative-ai` SDK generates executive release notes and changelog recaps from recent commits.
+- **? 3D Parallax Interface**: Interactive repository cards with 3D tilt effects (`react-parallax-tilt`), quick search palettes (`cmdk`), and smooth Framer Motion layout transitions.
+- **?? Multi-Stage Docker Containerization**: Pre-configured Alpine Nginx container ready for instant production deployment with `docker-compose.yml`.
+- **? Windows Launcher Scripts**: Includes `INSTALL.bat`, `Run_Project.bat`, and `UNINSTALL.bat` for seamless local setup.
+
+---
+
+## ??? Tech Stack & Directory Structure
+
+```
+Knowhere/
+??? src/
+?   ??? assets/             # Vector icons and hero graphics
+?   ??? components/         # Repository cards, AI summarizer modal, commit charts
+?   ??? store.ts            # Zustand global state store
+?   ??? App.tsx             # Main dashboard layout
+?   ??? main.tsx            # Application bootstrap
+??? public/                 # Favicons and manifest assets
+??? Dockerfile              # Production multi-stage Nginx container
+??? docker-compose.yml      # Docker compose configuration
+??? INSTALL.bat             # Windows one-click installation script
+??? Run_Project.bat         # Windows automated launcher
+??? package.json            # Project dependencies and build scripts
+```
+
+---
+
+## ?? Quick Start
+
+### 1. Local Development
+
+```bash
+# Clone the repository
+git clone https://github.com/Ares19v/Knowhere.git
+cd Knowhere
+
+# Install dependencies
+npm install
+
+# Start Vite dev server
+npm run dev
+```
+
+### 2. Docker Compose Deployment
+
+```bash
+docker compose up -d --build
+```
+Access Knowhere at `http://localhost:80` (or `http://localhost:5173` in development mode).
+
+---
+
+## ?? License
+
+Distributed under the MIT License. See `LICENSE` for details.

@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Folder, LogOut, Star, RefreshCw, Plus, Search, Palette, Pin, AlertTriangle, CheckSquare, Square, MapPin, Copy, Edit2, Check, Radar, Globe, Trash2 } from 'lucide-react';
 import { autoOrganizeRepos } from '../utils/autoOrganize';
 import Tilt from 'react-parallax-tilt';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { Command } from 'cmdk';
 
 const Dashboard = () => {
